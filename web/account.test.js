@@ -22,4 +22,25 @@ assert.equal((await request('logout','POST',{},student)).status,200);
 assert.equal((await request('state','GET',null,student)).status,401);
 const again=(await request('login','POST',{login:'student1',password:'student-password-123'})).cookie;
 assert.deepEqual((await request('state','GET',null,again)).data,data);
+
+assert.equal((await request('books/1/reviews','POST',{text:'Ортақ пікір <сынақ>'},again)).status,201);
+assert.equal((await request('books/1/rating','PUT',{value:5},again)).status,200);
+assert.equal((await request('books/1/rating','PUT',{value:3},again)).status,200);
+assert.equal((await request('books/1/rating','PUT',{value:5},student2)).status,200);
+assert.equal((await request('books/1/rating','PUT',{value:6},student2)).status,400);
+assert.equal((await request('books/1/reviews','POST',{text:' '},student2)).status,400);
+assert.equal((await request('books/1/reviews','POST',{text:'Anonymous'})).status,401);
+const shared=(await request('books/1/community')).data;
+assert.equal(shared.reviews[0].text,'Ортақ пікір <сынақ>');assert.equal(shared.reviews[0].name,'student1');assert.equal(shared.count,2);assert.equal(shared.average,4);
+const reviewId=shared.reviews[0].id;
+assert.equal((await request('admin/reviews','GET',null,student2)).status,403);
+assert.equal((await request('admin/reviews/'+reviewId,'PATCH',{visible:false},student2)).status,403);
+assert.equal((await request('admin/reviews/'+reviewId,'PATCH',{visible:false},admin)).status,200);
+assert.equal((await request('books/1/community')).data.reviews.length,0);
+assert.equal((await request('admin/reviews','GET',null,admin)).data[0].visible,0);
+assert.equal((await request('admin/reviews/'+reviewId,'PATCH',{visible:true},admin)).status,200);
+assert.equal((await request('books/1/community')).data.reviews.length,1);
+const {DatabaseSync}=require('node:sqlite');const disk=new DatabaseSync(path.join(dir,'library.sqlite'));assert.equal(disk.prepare('SELECT text FROM reviews WHERE id=?').get(reviewId).text,'Ортақ пікір <сынақ>');assert.equal(disk.prepare('SELECT COUNT(*) n FROM ratings').get().n,2);disk.close();
+const restored=spawn(global.process.execPath,['server.js'],{cwd:__dirname,env:{...global.process.env,PORT:String(port+1),QALAM_HOST:'127.0.0.1',QALAM_DATA_DIR:dir},stdio:['ignore','pipe','pipe']});t.after(()=>restored.kill());await new Promise((resolve,reject)=>{const timer=setTimeout(()=>reject(Error('Restore startup timeout')),8000);restored.stdout.on('data',d=>{if(d.toString().includes('ready')){clearTimeout(timer);resolve();}});restored.on('exit',()=>{clearTimeout(timer);reject(Error('Restore failed'));});});const persisted=await fetch(`http://127.0.0.1:${port+1}/api/books/1/community`).then(r=>r.json());assert.equal(persisted.reviews.length,1);assert.equal(persisted.count,2);assert.equal(persisted.average,4);
+
 });
