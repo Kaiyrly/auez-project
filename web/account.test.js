@@ -43,4 +43,26 @@ assert.equal((await request('books/1/community')).data.reviews.length,1);
 const {DatabaseSync}=require('node:sqlite');const disk=new DatabaseSync(path.join(dir,'library.sqlite'));assert.equal(disk.prepare('SELECT text FROM reviews WHERE id=?').get(reviewId).text,'Ортақ пікір <сынақ>');assert.equal(disk.prepare('SELECT COUNT(*) n FROM ratings').get().n,2);disk.close();
 const restored=spawn(global.process.execPath,['server.js'],{cwd:__dirname,env:{...global.process.env,PORT:String(port+1),QALAM_HOST:'127.0.0.1',QALAM_DATA_DIR:dir},stdio:['ignore','pipe','pipe']});t.after(()=>restored.kill());await new Promise((resolve,reject)=>{const timer=setTimeout(()=>reject(Error('Restore startup timeout')),8000);restored.stdout.on('data',d=>{if(d.toString().includes('ready')){clearTimeout(timer);resolve();}});restored.on('exit',()=>{clearTimeout(timer);reject(Error('Restore failed'));});});const persisted=await fetch(`http://127.0.0.1:${port+1}/api/books/1/community`).then(r=>r.json());assert.equal(persisted.reviews.length,1);assert.equal(persisted.count,2);assert.equal(persisted.average,4);
 
+
+const schoolBefore=(await request('school','GET',null,again)).data;assert.equal(schoolBefore.students.find(s=>s.name==='student1').score,0);assert.equal(schoolBefore.students.find(s=>s.name==='student1').active,0);
+const pupil=schoolBefore.students.find(s=>s.name==='student1').id;
+const other=schoolBefore.students.find(s=>s.name==='student2').id;
+assert.equal((await request('school')).status,401);
+assert.equal((await request('loans?student='+other,'GET',null,again)).status,403);
+assert.equal((await request('loans','POST',{student:pupil,book:1},again)).status,403);
+const stock=(await request('catalog')).data.books.find(b=>b.id===1).available;
+assert.equal((await request('loans','POST',{student:pupil,book:1},admin)).status,201);
+assert.equal((await request('catalog')).data.books.find(b=>b.id===1).available,stock-1);
+assert.equal((await request('loans','POST',{student:pupil,book:1},admin)).status,400);
+const history=(await request('loans?student='+pupil,'GET',null,admin)).data;assert.equal(history[0].status,'borrowed');
+assert.equal((await request('school','GET',null,again)).data.students.find(s=>s.id===pupil).score,0);
+assert.equal((await request('loans/'+history[0].id+'/return','POST',{},again)).status,403);
+assert.equal((await request('loans/'+history[0].id+'/return','POST',{},admin)).status,200);
+assert.equal((await request('loans/'+history[0].id+'/return','POST',{},admin)).status,400);
+assert.equal((await request('catalog')).data.books.find(b=>b.id===1).available,stock);
+assert.equal((await request('school','GET',null,again)).data.students.find(s=>s.id===pupil).score,10);
+assert.equal((await request('loans','POST',{student:pupil,book:1},admin)).status,201);
+const repeated=(await request('loans?student='+pupil,'GET',null,admin)).data[0];
+await request('loans/'+repeated.id+'/return','POST',{},admin);
+assert.equal((await request('school','GET',null,again)).data.students.find(s=>s.id===pupil).score,10);
 });
