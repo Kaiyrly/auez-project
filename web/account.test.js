@@ -65,4 +65,15 @@ assert.equal((await request('loans','POST',{student:pupil,book:1},admin)).status
 const repeated=(await request('loans?student='+pupil,'GET',null,admin)).data[0];
 await request('loans/'+repeated.id+'/return','POST',{},admin);
 assert.equal((await request('school','GET',null,again)).data.students.find(s=>s.id===pupil).score,10);
+
+assert.equal((await request('survey')).status,401);
+assert.equal((await request('survey/results','GET',null,again)).status,403);
+const beforeSurvey={stage:'before',answers:{interest:2,finding:2,books:1,motivation:2}};
+assert.equal((await request('survey','PUT',beforeSurvey,again)).status,200);
+beforeSurvey.answers.interest=3;assert.equal((await request('survey','PUT',beforeSurvey,again)).status,200);
+assert.equal((await request('survey','PUT',{stage:'after',answers:{interest:4,finding:5,books:3,motivation:5,favorite:'quiz',suggestion:'Жақсы <сынақ>'}},again)).status,200);
+assert.equal((await request('survey','PUT',{stage:'before',answers:{interest:7,finding:1,books:0,motivation:1}},again)).status,400);
+const summary=(await request('survey/results','GET',null,admin)).data;assert.equal(summary.before.count,1);assert.equal(summary.after.count,1);assert.equal(summary.paired,1);assert.equal(summary.changes.interest,1);assert.equal(summary.favorites.quiz,1);assert.equal(summary.suggestions[0],'Жақсы <сынақ>');
+assert.equal((await request('survey','GET',null,student2)).data.length,0);
+const restoredSurvey=await fetch(`http://127.0.0.1:${port+1}/api/survey/results`,{headers:{Cookie:admin}}).then(r=>r.json());assert.equal(restoredSurvey.paired,1);
 });
