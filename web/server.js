@@ -1,0 +1,39 @@
+const http=require('node:http');
+const fs=require('node:fs');
+const path=require('node:path');
+const crypto=require('node:crypto');
+const {promisify}=require('node:util');
+const {DatabaseSync}=require('node:sqlite');
+const {books:seed}=require('./catalog');
+const scrypt=promisify(crypto.scrypt);
+const dataDir=process.env.QALAM_DATA_DIR||path.join(__dirname,'.data');fs.mkdirSync(dataDir,{recursive:true,mode:0o700});
+const db=new DatabaseSync(path.join(dataDir,'library.sqlite'));
+db.exec('PRAGMA journal_mode=WAL; CREATE TABLE IF NOT EXISTS users(id INTEGER PRIMARY KEY,login TEXT UNIQUE NOT NULL,name TEXT NOT NULL,role TEXT NOT NULL,salt TEXT NOT NULL,hash TEXT NOT NULL,state TEXT NOT NULL); CREATE TABLE IF NOT EXISTS sessions(token TEXT PRIMARY KEY,user_id INTEGER NOT NULL,expires INTEGER NOT NULL); CREATE TABLE IF NOT EXISTS config(key TEXT PRIMARY KEY,value TEXT NOT NULL);');
+if(!db.prepare('SELECT value FROM config WHERE key=?').get('catalog'))db.prepare('INSERT INTO config VALUES(?,?)').run('catalog',JSON.stringify({books:seed,genres:[]}));
+const catalog=()=>JSON.parse(db.prepare('SELECT value FROM config WHERE key=?').get('catalog').value);
+const attempts=new Map();
+function reply(res,status,data){res.writeHead(status,{'Content-Type':'application/json; charset=utf-8','Cache-Control':'no-store'});res.end(JSON.stringify(data));}
+function session(req){const raw=(req.headers.cookie||'').split(';').map(s=>s.trim()).find(s=>s.startsWith('qalam_session='))?.slice(14);if(!raw)return null;const token=crypto.createHash('sha256').update(raw).digest('hex');return db.prepare('SELECT users.*,sessions.token FROM sessions JOIN users ON users.id=sessions.user_id WHERE sessions.token=? AND expires>?').get(token,Date.now());}
+function publicUser(u){return {id:u.id,name:u.name,login:u.login,role:u.role};}
+async function body(req){let text='';for await(const chunk of req){text+=chunk;if(text.length>1000000)throw Error('Тым үлкен сұрау');}return JSON.parse(text||'{}');}
+async function createUser(v,role){if(typeof v.login!=='string'||!/^[a-zA-Z0-9_.-]{3,40}$/.test(v.login)||typeof v.name!=='string'||!v.name.trim()||v.name.length>60||typeof v.password!=='string'||v.password.length<8||v.password.length>128)throw Error('Логин 3–40 таңба, ат 1–60 таңба, құпиясөз 8–128 таңба болуы керек.');const salt=crypto.randomBytes(16).toString('hex');const hash=(await scrypt(v.password,salt,64)).toString('hex');if(role==='admin'&&db.prepare('SELECT COUNT(*) n FROM users').get().n)throw Error('Алғашқы әкімші бұрын жасалған.');try{db.prepare('INSERT INTO users(login,name,role,salt,hash,state) VALUES(?,?,?,?,?,?)').run(v.login.toLowerCase(),v.name.trim(),role,salt,hash,JSON.stringify({shelf:{saved:[],orders:[]},preferences:{},engagement:{reviews:{},read:{}}}));}catch(e){if(e.code?.includes('CONSTRAINT')||e.message.includes('UNIQUE'))throw Error('Бұл логин бос емес.');throw e;}}
+const server=http.createServer(async(req,res)=>{try{const url=new URL(req.url,'http://localhost');const route=url.pathname;if(route.startsWith('/api/')){
+ if(req.method!=='GET'){const origin=req.headers.origin;if(origin!==`http://${req.headers.host}`&&origin!==`https://${req.headers.host}`)return reply(res,403,{error:'Сұрау көзі қабылданбады.'});}
+ const u=session(req);
+ if(route==='/api/session'&&req.method==='GET')return reply(res,200,{user:u?publicUser(u):null,setupRequired:db.prepare('SELECT COUNT(*) n FROM users').get().n===0});
+ if(route==='/api/catalog'&&req.method==='GET')return reply(res,200,catalog());
+ if(route==='/api/setup'&&req.method==='POST'){if(!['127.0.0.1','::1','::ffff:127.0.0.1'].includes(req.socket.remoteAddress))return reply(res,403,{error:'Алғашқы әкімшіні сервер орналасқан компьютерден жасаңыз.'});await createUser(await body(req),'admin');return reply(res,201,{ok:true});}
+ if(route==='/api/login'&&req.method==='POST'){const key=req.socket.remoteAddress;const now=Date.now();let a=attempts.get(key);if(!a||a.until<now){a={count:0,until:now+600000};attempts.set(key,a);}if(a.count>=10)return reply(res,429,{error:'Көп әрекет жасалды. 10 минуттан кейін қайталаңыз.'});a.count++;const v=await body(req);if(typeof v.password!=='string'||v.password.length>128)return reply(res,401,{error:'Логин немесе құпиясөз қате.'});const found=db.prepare('SELECT * FROM users WHERE login=?').get(String(v.login||'').toLowerCase());const hash=await scrypt(v.password,found?.salt||'dummy-salt',64);if(!found||!crypto.timingSafeEqual(hash,Buffer.from(found.hash,'hex')))return reply(res,401,{error:'Логин немесе құпиясөз қате.'});attempts.delete(key);const token=crypto.randomBytes(32).toString('hex');db.prepare('DELETE FROM sessions WHERE expires<?').run(now);db.prepare('INSERT INTO sessions VALUES(?,?,?)').run(crypto.createHash('sha256').update(token).digest('hex'),found.id,now+86400000);res.setHeader('Set-Cookie',`qalam_session=${token}; HttpOnly; SameSite=Strict; Path=/; Max-Age=86400${process.env.QALAM_SECURE_COOKIE==='1'?'; Secure':''}`);return reply(res,200,{user:publicUser(found)});}
+ if(!u)return reply(res,401,{error:'Алдымен аккаунтқа кіріңіз.'});
+ if(route==='/api/logout'&&req.method==='POST'){db.prepare('DELETE FROM sessions WHERE token=?').run(u.token);res.setHeader('Set-Cookie','qalam_session=; HttpOnly; SameSite=Strict; Path=/; Max-Age=0');return reply(res,200,{ok:true});}
+ if(route==='/api/state'&&req.method==='GET')return reply(res,200,JSON.parse(u.state));
+ if(route==='/api/state'&&req.method==='PUT'){const v=await body(req);const ids=new Set(catalog().books.map(b=>b.id));if(!v.shelf||!Array.isArray(v.shelf.saved)||!Array.isArray(v.shelf.orders)||[...v.shelf.saved,...v.shelf.orders].some(id=>!ids.has(id)))return reply(res,400,{error:'Жеке сөре деректері қате.'});db.prepare('UPDATE users SET state=? WHERE id=?').run(JSON.stringify(v),u.id);return reply(res,200,{ok:true});}
+ if(u.role!=='admin')return reply(res,403,{error:'Тек кітапханашыға рұқсат.'});
+ if(route==='/api/users'&&req.method==='GET')return reply(res,200,db.prepare('SELECT id,login,name,role FROM users').all());
+ if(route==='/api/users'&&req.method==='POST'){await createUser(await body(req),'student');return reply(res,201,{ok:true});}
+ if(route==='/api/catalog'&&req.method==='PUT'){const v=await body(req);if(!Array.isArray(v.books)||v.books.length>10000||!Array.isArray(v.genres)||v.genres.some(g=>typeof g!=='string'||g.length>60)||new Set(v.books.map(b=>b.id)).size!==v.books.length||v.books.some(b=>!Number.isInteger(b.id)||b.id<1||typeof b.title!=='string'||!b.title.trim()||b.title.length>120||typeof b.author!=='string'||b.author.length>100||typeof b.genre!=='string'||b.genre.length>60||typeof b.description!=='string'||b.description.length>2000||typeof b.cover!=='string'||typeof b.label!=='string'||!['sand','forest','rust','blue','olive','night','plum','rose'].includes(b.color)||!Number.isInteger(b.total)||!Number.isInteger(b.available)||b.total<0||b.available<0||b.available>b.total))return reply(res,400,{error:'Кітап қорының деректері қате.'});db.prepare('UPDATE config SET value=? WHERE key=?').run(JSON.stringify(v),'catalog');return reply(res,200,{ok:true});}
+ return reply(res,404,{error:'API табылмады.'});
+ }
+ const file=path.resolve(__dirname,'.'+(route==='/'?'/index.html':route));if(!file.startsWith(__dirname+path.sep)||!['.html','.css','.js'].includes(path.extname(file))||['server.js','account.test.js','catalog.test.js'].includes(path.basename(file))) {res.writeHead(404);return res.end('Not found');}fs.readFile(file,(err,data)=>{if(err){res.writeHead(404);return res.end('Not found');}res.setHeader('Content-Type',{'.html':'text/html; charset=utf-8','.css':'text/css','.js':'text/javascript'}[path.extname(file)]);res.setHeader('X-Content-Type-Options','nosniff');res.end(data);});
+ }catch(e){reply(res,400,{error:e.message.includes('SQL')?'Сақтау қатесі.':e.message});}});
+server.listen(process.env.PORT||3000,process.env.QALAM_HOST||'0.0.0.0',()=>console.log('Qalam server ready'));

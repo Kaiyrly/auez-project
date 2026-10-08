@@ -1,0 +1,12 @@
+const books = [
+  {id:1,total:12,available:8,title:'Абай жолы',author:'Мұхтар Әуезов',genre:'Қазақ әдебиеті',color:'sand',label:'РОМАН-ЭПОПЕЯ',cover:'АБАЙ\nЖОЛЫ',year:1942,description:'Абайдың өмірі мен қазақ қоғамының болмысын суреттейтін роман-эпопея. Адамгершілік, білім және рухани ізденіс туралы ұлы шығарма.'},
+  {id:2,total:9,available:5,title:'Көшпенділер',author:'Ілияс Есенберлин',genre:'Қазақ әдебиеті',color:'forest',label:'ТАРИХИ ТРИЛОГИЯ',cover:'КӨШПЕНДІЛЕР',year:1969,description:'Қазақ хандығының қалыптасуы мен ел тарихының маңызды кезеңдерін баяндайтын тарихи трилогия.'},
+  {id:3,total:15,available:11,title:'Қара сөздер',author:'Абай Құнанбайұлы',genre:'Қазақ әдебиеті',color:'rust',label:'ОЙ МЕН ДАНАЛЫҚ',cover:'ҚАРА\nСӨЗДЕР',year:1890,description:'Білім, еңбек, мінез және адамгершілік жайындағы философиялық ойлар жинағы.'},
+  {id:4,total:7,available:3,title:'Кішкентай ханзада',author:'Антуан де Сент-Экзюпери',genre:'Әлем әдебиеті',color:'blue',label:'ӘЛЕМ ӘДЕБИЕТІ',cover:'КІШКЕНТАЙ\nХАНЗАДА',year:1943,description:'Достық, сүйіспеншілік пен жауапкершілік туралы поэтикалық хикая. Ең маңызды нәрсені жүрекпен көреміз.'},
+  {id:5,total:10,available:6,title:'Менің атым Қожа',author:'Бердібек Соқпақбаев',genre:'Балаларға',color:'olive',label:'БАЛАЛЫҚ ШАҚ ӘЛЕМІ',cover:'МЕНІҢ АТЫМ\nҚОЖА',year:1957,description:'Қожаның қызықты оқиғалары, балалық арманы және өзін өзгертуге талпынысы туралы сүйікті повесть.'},
+  {id:6,total:5,available:0,title:'Уақыттың қысқаша тарихы',author:'Стивен Хокинг',genre:'Ғылым',color:'night',label:'ҒЫЛЫМҒА ҚАДАМ',cover:'УАҚЫТТЫҢ\nҚЫСҚАША\nТАРИХЫ',year:1988,description:'Ғаламның пайда болуы, кеңістік, уақыт және қара құрдымдар жайлы көпшілікке арналған ғылыми кітап.'},
+  {id:7,total:8,available:5,title:'Ұшқан ұя',author:'Бауыржан Момышұлы',genre:'Қазақ әдебиеті',color:'plum',label:'ЕСТЕЛІК ПОВЕСТЬ',cover:'ҰШҚАН\nҰЯ',year:1974,description:'Отбасы тәрбиесі, ұлттық дәстүр және балалық шақ туралы өмірбаяндық шығарма.'},
+  {id:8,total:6,available:4,title:'Алиса ғажайыптар елінде',author:'Льюис Кэрролл',genre:'Балаларға',color:'rose',label:'ҚИЯЛҒА ҚАНАТ',cover:'АЛИСА\nҒАЖАЙЫПТАР\nЕЛІНДЕ',year:1865,description:'Алисаның таңғажайып әлемдегі сапары туралы қиялға толы ертегі.'}
+];
+function filterBooks(query, genre) { const q=query.trim().toLocaleLowerCase(); return books.filter(b=>(genre==='Барлығы'||b.genre===genre)&&`${b.title} ${b.author}`.toLocaleLowerCase().includes(q)); }
+if(typeof module!=='undefined') module.exports={books,filterBooks};
