@@ -30,7 +30,7 @@ for kind,text in blocks:
  pdf.append(Paragraph(escape(text),styles[kind]))
 (root/'DEFENSE-7-MINUTES.md').write_text('\n\n'.join(md)+'\n')
 (root/'downloads').mkdir(exist_ok=True)
-for name in ['Qalam-defense-v4','Qalam-defense-v3','Qalam-defense-v2','Qalam-7-minutes']:
+for name in ['Qalam-defense-v5','Qalam-defense-v4','Qalam-defense-v3','Qalam-defense-v2','Qalam-7-minutes']:
  doc.save(root/'downloads'/f'{name}.docx')
  SimpleDocTemplate(str(root/'downloads'/f'{name}.pdf'),leftMargin=40,rightMargin=40,topMargin=36,bottomMargin=36).build(copy.deepcopy(pdf))
 print('Generated matching Markdown, Word and PDF')
