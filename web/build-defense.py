@@ -10,11 +10,11 @@ from xml.sax.saxutils import escape
 root=pathlib.Path(__file__).resolve().parent
 slides=json.loads(subprocess.check_output(['node','-e','process.stdout.write(JSON.stringify(require("./defense-data.js")))'],cwd=root))
 assert len(slides)==6 and all(isinstance(s['spoken'],str) for s in slides)
-blocks=[('h1','Qalam: қысқартылған қорғау сөзі'),('p','«Онлайн кітапхана: кітапхана жұмысын цифрландыру»'),('p','«Қаныш Сәтпаев атындағы Жәнтікей орта мектебі» КММ'),('p','Авторлар: Мұхаметкәрім Айбын Таңатұлы, Амантай Елжан Ерланұлы. Ғылыми жетекші: Мұхаметкәрім Қаныш Саятұлы.'),('p','6 бөлім. Қорғау сөзі сайттағы бір беттік презентацияның бөлімдерімен сәйкес келеді. Мәтінді 7 минуттан аспайтын қорғауға қолдануға болады.')]
+blocks=[('h1','Qalam: қысқартылған қорғау сөзі'),('p','«Онлайн кітапхана: кітапхана жұмысын цифрландыру»'),('p','«Қаныш Сәтпаев атындағы Жәнтікей орта мектебі» КММ'),('p','Авторлар: Мұхаметкәрім Айбын Таңатұлы, Амантай Елжан Ерланұлы. Ғылыми жетекші: Мұхаметкәрім Қаныш Саятұлы.'),('p','6 қысқа бөлім. Мәтін презентациямен бірдей ретпен жазылған.')]
 for i,s in enumerate(slides,1):
  blocks.append(('h2',f'{i}-бөлім. {s["title"]} · {s["speaker"]}'))
  blocks.append(('p',s['spoken']))
-blocks.extend([('h2','Дайындық нұсқауы — қорғауда оқылмайды'),('p','Сайттың «Презентация» бөлімін ашыңыздар. Барлық бөлім бір бетте көрсетіледі. Айбын мен Елжан мәтінді бөлімдердің ретімен кезектесіп айтады. Қорғауға дейін мәтінді дауыстап оқып, ұзақтығын өлшеңіздер.')])
+blocks.extend([('h2','Дайындық нұсқауы — қорғауда оқылмайды'),('p','Презентацияны ашып, бөлімдердің ретімен кезектесіп сөйлеңіздер. Алдын ала дауыстап оқып көріңіздер.')])
 md=[];doc=Document();doc.styles['Normal'].font.name='Arial';doc.styles['Normal'].font.size=Pt(12)
 pdfmetrics.registerFont(TTFont('Kazakh','/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf'));pdfmetrics.registerFont(TTFont('KazakhBold','/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf'))
 styles={'p':ParagraphStyle('p',fontName='Kazakh',fontSize=11,leading=17,spaceAfter=9),'action':ParagraphStyle('action',fontName='Kazakh',fontSize=10,leading=15,textColor='#32665b',spaceAfter=12)}
