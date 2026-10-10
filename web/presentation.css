@@ -3,3 +3,16 @@
 .presentation-downloads{display:flex;gap:20px;flex-wrap:wrap;font-size:12px;font-weight:700;color:#637b54;padding-top:10px}.presentation-downloads a{text-decoration:underline;text-underline-offset:3px}
 
 #presentation-notes-panel{white-space:pre-line;max-height:35vh;overflow:auto;line-height:1.6;}
+
+/* Presentation is a regular section with the site navigation available. */
+.presentation-mode{overflow:auto}.presentation-mode body> :not(#presentation-root){visibility:visible}
+.presentation-mode main,.presentation-mode footer{display:none}
+#presentation-root{position:relative;inset:auto;z-index:auto;margin:0 auto 36px;max-width:1280px;border:1px solid #dfe5d6;border-radius:18px;overflow:hidden}
+.presentation-shell{min-height:640px;padding:36px 48px 24px}
+.presentation-timer,.presentation-meta{display:none}
+.presentation-tag{margin-top:26px}
+.presentation-school{display:none}
+.presentation-bottom{justify-content:space-between}
+header nav a.active{font-weight:800;color:#315b46;text-decoration:underline;text-underline-offset:6px}
+@media(max-width:700px){#presentation-root{margin:0 12px 24px}.presentation-shell{padding:24px 18px;min-height:520px}#presentation-slide h1{font-size:34px}}
+.presentation-scroll-hint{font-size:13px;font-weight:700;color:#637b54}.presentation-bottom{flex-wrap:wrap}#presentation-root{touch-action:pan-x}@media(max-width:700px){.presentation-scroll-hint{font-size:11px;order:3;width:100%;text-align:center}}

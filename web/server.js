@@ -28,7 +28,7 @@ const server=http.createServer(async(req,res)=>{try{const url=new URL(req.url,'h
  if(await school(req,res,url,u))return;
  if(await survey(req,res,url,u))return;
  if(await library(req,res,url,u))return;
- if(route==='/api/version'&&req.method==='GET')return reply(res,200,{release:'defense-v2',commit:process.env.RENDER_GIT_COMMIT||'local'});
+ if(route==='/api/version'&&req.method==='GET')return reply(res,200,{release:'presentation-section-v3',commit:process.env.RENDER_GIT_COMMIT||'local'});
  if(route==='/api/session'&&req.method==='GET')return reply(res,200,{user:u?publicUser(u):null,setupRequired:db.prepare('SELECT COUNT(*) n FROM users').get().n===0});
  if(route==='/api/catalog'&&req.method==='GET')return reply(res,200,catalog());
  const communityMatch=route.match(/^\/api\/books\/(\d+)\/(community|reviews|rating)$/);
