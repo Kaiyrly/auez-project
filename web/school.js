@@ -8,4 +8,6 @@ async function refreshCatalog(){const c=await api('catalog');books.splice(0,book
 document.addEventListener('click',async e=>{const history=e.target.closest('[data-history]');if(history)loanHistory(Number(history.dataset.history));const returned=e.target.closest('[data-return-loan]');if(returned){returned.disabled=true;try{await api(`loans/${returned.dataset.returnLoan}/return`,'POST',{});await refreshCatalog();await renderSchool();await loanHistory(Number(returned.dataset.student));}catch(error){toast(error.message);returned.disabled=false;}}});
 const previousAccountPanel=accountPanel;accountPanel=function(){previousAccountPanel();if(account){document.querySelector('#feature-content').insertAdjacentHTML('beforeend',`<div class="feature-actions"><button class="secondary" id="my-history">Менің кітап тарихым</button></div>`);document.querySelector('#my-history').onclick=()=>loanHistory(account.id);}};document.querySelector('#profile-open').onclick=accountPanel;
 if(accountReady)renderSchool();else{const check=setInterval(()=>{if(accountReady){clearInterval(check);renderSchool();}},100);setTimeout(()=>clearInterval(check),15000);}
+window.refreshCatalog=refreshCatalog;window.renderSchool=renderSchool;
+
 }

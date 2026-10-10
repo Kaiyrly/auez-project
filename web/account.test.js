@@ -76,4 +76,23 @@ assert.equal((await request('survey','PUT',{stage:'before',answers:{interest:7,f
 const summary=(await request('survey/results','GET',null,admin)).data;assert.equal(summary.before.count,1);assert.equal(summary.after.count,1);assert.equal(summary.paired,1);assert.equal(summary.changes.interest,1);assert.equal(summary.favorites.quiz,1);assert.equal(summary.suggestions[0],'Жақсы <сынақ>');
 assert.equal((await request('survey','GET',null,student2)).data.length,0);
 const restoredSurvey=await fetch(`http://127.0.0.1:${port+1}/api/survey/results`,{headers:{Cookie:admin}}).then(r=>r.json());assert.equal(restoredSurvey.paired,1);
+
+assert.equal((await request('statistics','GET',null,again)).status,403);
+const uniqueBook=(await request('catalog')).data;const target=uniqueBook.books.find(b=>b.id===2);target.available=1;assert.equal((await request('catalog','PUT',uniqueBook,admin)).status,200);
+assert.equal((await request('reservations','POST',{book:2},again)).status,201);
+assert.equal((await request('catalog')).data.books.find(b=>b.id===2).available,1);
+assert.equal((await request('catalog')).data.books.find(b=>b.id===2).availableForLoan,0);
+assert.equal((await request('reservations','POST',{book:2},student2)).status,400);
+const reserve=(await request('reservations','GET',null,again)).data[0];assert.equal(reserve.status,'active');
+assert.equal((await request('reservations/'+reserve.id+'/cancel','POST',{},student2)).status,403);
+assert.equal((await request('loans','POST',{student:other,book:2},admin)).status,400);
+assert.equal((await request('loans','POST',{student:pupil,book:2},admin)).status,201);
+assert.equal((await request('reservations','GET',null,again)).data[0].status,'collected');
+const received=(await request('loans?student='+pupil,'GET',null,admin)).data[0];await request('loans/'+received.id+'/return','POST',{},admin);
+assert.equal((await request('reservations','POST',{book:2},student2)).status,201);
+const cancellable=(await request('reservations','GET',null,student2)).data[0];await request('reservations/'+cancellable.id+'/cancel','POST',{},student2);
+assert.equal((await request('catalog')).data.books.find(b=>b.id===2).availableForLoan,1);
+const stats=(await request('statistics','GET',null,admin)).data;assert.equal(stats.students,2);assert.equal(stats.reserved,0);assert.equal(stats.returned,3);
+const recommended=(await request('recommendations','GET',null,again)).data;assert.ok(recommended.recommendations.every(r=>r.book.id!==1&&r.book.id!==2&&r.book.availableForLoan>0));
+const libraryDisk=new (require('node:sqlite').DatabaseSync)(path.join(dir,'library.sqlite'));assert.ok(libraryDisk.prepare('SELECT COUNT(*) n FROM books').get().n>0);libraryDisk.prepare("UPDATE reservations SET status='active',expires=? WHERE id=?").run(Date.now()-1000,cancellable.id);libraryDisk.close();assert.equal((await request('reservations','GET',null,student2)).data[0].status,'expired');
 });
