@@ -14,6 +14,9 @@ blocks=[('h1','Qalam: қысқартылған қорғау сөзі'),('p','«�
 for i,s in enumerate(slides,1):
  blocks.append(('h2',f'{i}-бөлім. {s["title"]} · {s["speaker"]}'))
  blocks.append(('p',s['spoken']))
+ if i==4:
+  blocks.append(('h1','АЙБЫН ДА, ЕЛЖАН ДА: САЙТТЫҢ ФУНКЦИЯЛАРЫН ӨЗ СӨЗІМЕН ТҮСІНДІРУ'))
+  blocks.append(('p','Бұл — екеуіне арналған нұсқау. Осы жерде сайттың не істейтінін өз сөздеріңмен түсіндіріңдер. Содан кейін 5-бөлімге өтіңдер.'))
 blocks.extend([('h2','Дайындық нұсқауы — қорғауда оқылмайды'),('p','Презентацияны ашып, бөлімдердің ретімен кезектесіп сөйлеңіздер. Алдын ала дауыстап оқып көріңіздер.')])
 md=[];doc=Document();doc.styles['Normal'].font.name='Arial';doc.styles['Normal'].font.size=Pt(12)
 pdfmetrics.registerFont(TTFont('Kazakh','/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf'));pdfmetrics.registerFont(TTFont('KazakhBold','/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf'))
@@ -27,7 +30,7 @@ for kind,text in blocks:
  pdf.append(Paragraph(escape(text),styles[kind]))
 (root/'DEFENSE-7-MINUTES.md').write_text('\n\n'.join(md)+'\n')
 (root/'downloads').mkdir(exist_ok=True)
-for name in ['Qalam-defense-v3','Qalam-defense-v2','Qalam-7-minutes']:
+for name in ['Qalam-defense-v4','Qalam-defense-v3','Qalam-defense-v2','Qalam-7-minutes']:
  doc.save(root/'downloads'/f'{name}.docx')
  SimpleDocTemplate(str(root/'downloads'/f'{name}.pdf'),leftMargin=40,rightMargin=40,topMargin=36,bottomMargin=36).build(copy.deepcopy(pdf))
 print('Generated matching Markdown, Word and PDF')
