@@ -40,7 +40,7 @@ function buildStandalone() {
     /(['"])([^'"\r\n]+?\.(?:png|jpe?g|webp|gif|svg|avif|ico)(?:[?#][^'"\r\n]*)?)\1/gi,
     (match, quote, reference) => `${quote}${inlineImage(reference)}${quote}`
   );
-  let html = fs.readFileSync(path.join(root, 'index.html'), 'utf8');
+  let html = fs.readFileSync(path.join(root, 'index.template.html'), 'utf8');
   html = html.replace(/<link\b(?=[^>]*\brel=["']stylesheet["'])(?=[^>]*\bhref=["']([^"']+)["'])[^>]*>/gi,
     (tag, reference) => {
       if (!isLocal(reference)) return tag;
@@ -68,16 +68,19 @@ if (require.main === module) {
       (outputIndex !== -1 && !args[outputIndex + 1])) {
     throw Error('Usage: node build-standalone.cjs [--check] [--output path]');
   }
-  const output = outputIndex === -1 ? path.join(root, 'qalam.html') : path.resolve(args[outputIndex + 1]);
+  const outputs = outputIndex === -1
+    ? ['index.html', 'qalam.html'].map(filename => path.join(root, filename))
+    : [path.resolve(args[outputIndex + 1])];
   const html = buildStandalone();
   if (check) {
-    if (!fs.existsSync(output) || fs.readFileSync(output, 'utf8') !== html) {
-      console.error('Standalone HTML is out of date. Run npm run build:standalone.');
+    const stale = outputs.filter(output => !fs.existsSync(output) || fs.readFileSync(output, 'utf8') !== html);
+    if (stale.length) {
+      console.error(`Standalone HTML is out of date: ${stale.map(output => path.basename(output)).join(', ')}. Run npm run build:standalone.`);
       process.exitCode = 1;
-    } else console.log('Standalone HTML is up to date.');
+    } else console.log(`Standalone HTML is up to date: ${outputs.map(output => path.basename(output)).join(', ')}.`);
   } else {
-    fs.writeFileSync(output, html);
-    console.log(`Built ${path.basename(output)} (${Buffer.byteLength(html)} bytes).`);
+    for (const output of outputs) fs.writeFileSync(output, html);
+    console.log(`Built ${outputs.map(output => path.basename(output)).join(', ')} (${Buffer.byteLength(html)} bytes each).`);
   }
 }
 
