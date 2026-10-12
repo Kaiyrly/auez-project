@@ -1,0 +1,131 @@
+/* A photo journal that follows the site's paper, forest and gold palette. */
+.project-progress {
+  margin: 0 56px 72px;
+  padding-top: 18px;
+  scroll-margin-top: 24px;
+}
+.project-progress [hidden], .project-lightbox [hidden] { display: none !important; }
+.project-progress-heading { display: flex; align-items: center; justify-content: space-between; gap: 24px; }
+.project-progress .eyebrow { color: #6b774e; letter-spacing: 2px; }
+.project-progress h2 { margin: 16px 0; font-size: clamp(34px, 4.6vw, 54px); line-height: 1.15; }
+.project-progress-intro { max-width: 610px; margin: 0; color: #596956; font-size: 16px; line-height: 1.85; }
+.project-journal-stamp {
+  width: 122px; height: 122px; flex: 0 0 auto; border: 1px solid #b49a64;
+  border-radius: 50%; display: flex; flex-direction: column; align-items: center;
+  justify-content: center; gap: 6px; color: #75602d; transform: rotate(10deg);
+  outline: 1px dashed #c8b587; outline-offset: -7px;
+}
+.project-journal-stamp span { font-size: 9px; letter-spacing: 1px; }
+.project-journal-stamp b { font-size: 29px; font-weight: 400; line-height: 1; }
+.project-stages {
+  list-style: none; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr));
+  padding: 28px 0; margin: 32px 0 36px; gap: 22px; border-block: 1px solid #dfe4d6;
+}
+.project-stages li { display: flex; align-items: flex-start; gap: 12px; }
+.project-stage-number {
+  display: grid; place-items: center; width: 34px; height: 34px; flex: 0 0 auto;
+  background: #e9eedf; color: #315b46; border: 1px solid #d9e1ce;
+  border-radius: 50%; font-size: 12px; font-weight: 800;
+}
+.project-stages strong { display: block; font-size: 14px; line-height: 1.65; }
+.project-stages small { display: block; margin-top: 4px; font-size: 12px; line-height: 1.6; color: #66715e; }
+.project-album-toolbar { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px; }
+.project-album-toolbar h3 { margin: 0; font-size: 24px; }
+.project-photo-filters { display: flex; flex-wrap: wrap; gap: 6px; }
+.project-photo-filters button {
+  min-height: 44px; padding: 10px 15px; border: 1px solid #dce2d3; border-radius: 24px;
+  color: #4e6046; background: transparent; font-size: 12px; font-weight: 700;
+}
+.project-photo-filters button[aria-pressed="true"] { background: #315b46; color: #fff; border-color: #315b46; }
+.project-photo-filters button:hover { box-shadow: 0 2px 8px #263c3215; }
+.project-album-hint { display: flex; justify-content: space-between; gap: 16px; margin: 16px 0 0; color: #65705f; font-size: 12px; line-height: 1.65; }
+.project-photo-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); align-items: start; gap: 36px 28px; padding: 30px 5px 10px; }
+.project-photo-card {
+  min-width: 0; margin: 0; padding: 12px 12px 20px; background: #fffdf8;
+  border: 1px solid #e2dfd3; border-radius: 3px; box-shadow: 0 10px 24px #263c320d;
+  transform: rotate(-1.2deg); transition: transform .2s, box-shadow .2s;
+}
+.project-photo-card:nth-child(3n + 2) { transform: rotate(1.5deg); margin-top: 36px; }
+.project-photo-card:nth-child(3n) { transform: rotate(-.6deg); margin-top: 12px; }
+.project-photo-card:hover, .project-photo-card:focus-within { transform: translateY(-4px); box-shadow: 0 16px 30px #263c321a; }
+.project-photo-open {
+  display: block; position: relative; width: 100%; padding: 0; border: 0;
+  color: white; background: #e5eadf; aspect-ratio: 3 / 4; overflow: hidden;
+}
+.project-photo-open img { display: block; width: 100%; height: 100%; object-fit: cover; transition: transform .35s; }
+.project-photo-open:hover img { transform: scale(1.025); }
+.project-photo-number {
+  position: absolute; top: 12px; left: 12px; padding: 6px 9px; border-radius: 4px;
+  color: #fff; background: #203b30dd; font-size: 11px; font-weight: 700; letter-spacing: 1px;
+}
+.project-photo-expand {
+  position: absolute; bottom: 12px; right: 12px; display: grid; place-items: center;
+  width: 36px; height: 36px; border-radius: 50%; background: #fffdf8ee; color: #315b46; font-size: 21px;
+}
+.project-photo-card figcaption { padding: 17px 5px 0; }
+.project-photo-stage { display: block; color: #75602d; font-size: 10px; letter-spacing: 1.3px; font-weight: 800; text-transform: uppercase; }
+.project-photo-card h4 { margin: 9px 0 5px; font-size: 18px; line-height: 1.4; }
+.project-photo-card p { margin: 0; font-size: 12px; line-height: 1.7; color: #64705e; }
+.project-progress-closing { display: flex; align-items: center; gap: 17px; padding-top: 22px; color: #65705a; font-size: 14px; line-height: 1.7; }
+.project-progress-closing::before { content: ''; width: 40px; height: 1px; background: #b49a64; flex-shrink: 0; }
+.project-progress-closing em { font-family: 'Playfair Display', Georgia, serif; font-size: 19px; color: #315b46; }
+body.project-photo-viewing { overflow: hidden; }
+dialog.project-lightbox { width: min(1080px, calc(100% - 28px)); max-width: 1080px; max-height: calc(100dvh - 28px); padding: 0; border: 1px solid #67776a; background: #f7f7ef; }
+.project-lightbox::backdrop { background: #14221ce6; backdrop-filter: blur(6px); }
+.project-lightbox-header { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 12px 18px; border-bottom: 1px solid #dce2d3; }
+.project-lightbox-count { font-size: 12px; font-weight: 700; color: #4d6047; }
+.project-lightbox-close { border: 1px solid #cbd5c4; background: transparent; color: #315b46; border-radius: 7px; padding: 10px 14px; min-height: 44px; font-weight: 700; font-size: 13px; }
+.project-lightbox-figure { margin: 0; }
+.project-lightbox-image-wrap { background: #e8ece2; min-height: 160px; }
+.project-lightbox-image { display: block; width: 100%; max-height: calc(100dvh - 270px); object-fit: contain; }
+.project-lightbox-caption { padding: 16px 22px 0; }
+.project-lightbox-caption h3 { margin: 0 0 7px; font-size: 21px; }
+.project-lightbox-caption p { margin: 0; color: #596956; }
+.project-lightbox-controls { display: flex; align-items: center; justify-content: space-between; gap: 14px; padding: 14px 22px 18px; }
+.project-lightbox-controls button { min-height: 44px; border: 1px solid #cbd5c4; border-radius: 7px; background: #fffdf8; color: #315b46; padding: 10px 16px; font-size: 13px; font-weight: 700; }
+.project-lightbox-controls span { font-size: 11px; color: #66715e; }
+.project-photo-error { padding: 30px 22px; text-align: center; }
+@media (max-width: 1000px) {
+  .project-progress { margin-inline: 30px; }
+  .project-stages { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 24px; }
+  .project-photo-grid { gap: 28px 18px; }
+  .project-photo-card { padding: 8px 8px 15px; }
+  .project-photo-card h4 { font-size: 16px; }
+}
+@media (max-width: 700px) {
+  .project-progress { margin: 0 22px 40px; padding-top: 6px; }
+  .project-progress-heading { align-items: flex-start; gap: 12px; }
+  .project-journal-stamp { display: none; }
+  .project-progress .eyebrow { font-size: 10px; letter-spacing: 1.6px; }
+  .project-progress-intro { font-size: 14px; }
+  .project-stages { gap: 20px 12px; margin-top: 26px; padding: 22px 0; }
+  .project-stages li { gap: 8px; }
+  .project-stage-number { width: 29px; height: 29px; font-size: 10px; }
+  .project-stages strong { font-size: 12px; }
+  .project-stages small { font-size: 11px; }
+  .project-photo-filters { gap: 5px; }
+  .project-photo-filters button { padding: 9px 12px; font-size: 11px; }
+  .project-album-hint { flex-direction: column; gap: 4px; }
+  .project-photo-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 22px 14px; padding-inline: 2px; }
+  .project-photo-card:nth-child(n) { margin-top: 0; transform: none; }
+  .project-photo-card:nth-child(even) { margin-top: 22px; }
+  .project-photo-card h4 { font-size: 15px; }
+  .project-photo-card figcaption { padding: 12px 2px 0; }
+  .project-photo-card p { font-size: 11px; }
+  .project-photo-stage { font-size: 9px; letter-spacing: .5px; }
+  .project-lightbox-caption { padding-inline: 16px; }
+  .project-lightbox-controls { padding-inline: 16px; }
+  .project-lightbox-controls span { display: none; }
+  .project-lightbox-image { max-height: calc(100dvh - 280px); }
+}
+@media (max-width: 450px) {
+  .project-photo-grid { grid-template-columns: 1fr; gap: 24px; padding-inline: 4px; }
+  .project-photo-card:nth-child(n) { margin-top: 0; padding: 10px 10px 18px; }
+  .project-photo-card h4 { font-size: 19px; }
+  .project-photo-card p { font-size: 13px; }
+  .project-photo-stage { font-size: 10px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .project-progress *, .project-progress *::before { transition: none; scroll-behavior: auto; }
+  .project-photo-card:hover, .project-photo-card:focus-within { transform: none; }
+}
